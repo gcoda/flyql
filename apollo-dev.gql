@@ -1,0 +1,191 @@
+input TemplateTest @resolve(template: { some: 123 })
+input FetchTest
+  @fetch(
+    url: "https://swapi.co/api/starships/?format=json"
+    response: JSON
+  )
+  @resolve(template: { _: [res, body] })
+input FetchCacheTest
+  @fetch(
+    maxAge: 100
+    url: "https://swapi.co/api/starships/?format=json"
+    response: JSON
+  )
+  @resolve(template: { _: [res, cache] })
+
+input AllTutorialsResolver
+  @fetch(url: "${env.base}${args.lang}.json", response: JSON)
+  @resolve(
+    template: {
+      __lang: { _: [args, lang] }
+      __ids: { _map: [{ _: [res, body] }, { _: value }, value] }
+      pageInfo: { totalCount: { _: [res, body, length] } }
+    }
+  ) {
+  lang: Expression = "en"
+}
+
+type AllTutorialsConnection {
+  pageInfo: JSON
+  tutorials: [Tutorial]
+    @TutorialResolver
+    @ListResolver(
+      args: {
+        _map: [
+          { _: [root, __ids] }
+          { id: { _: value }, lang: { _: [root, __lang] } }
+          value
+          index
+        ]
+      }
+    )
+}
+
+input TutorialResolver
+  @fetch(
+    url: "${env.base}${args.lang}/${args.id}.xml"
+    response: XML
+  )
+  @resolve(
+    template: {
+      _if: [
+        { _: [res, body, tutorial] }
+        {
+          id: { _: [args, id] }
+          title: { _: [res, body, tutorial, title] }
+          description: { _: [res, body, tutorial, description] }
+          blocks: {
+            _map: [
+              { _: [res, body, tutorial, block] }
+              {
+                title: {
+                  _or: [{ _: [v, "title@text"] }, { _: [v, title] }]
+                }
+                description: { _: i }
+                # description: { _: [res, xml, tutorial, description] }
+                id: {
+                  _add: [
+                    { _mul: [{ _: [args, id] }, 100] }
+                    { _: i }
+                  ]
+                }
+                playground: {
+                  _or: [{ _: [v, example] }, { _: [v, playground] }]
+                }
+              }
+              v
+              i
+            ]
+          }
+        }
+        false
+      ]
+    }
+  ) {
+  id: Expression = 1
+  lang: Expression = "en"
+}
+
+type Block {
+  id: Int
+  tutorialId: Int
+  title: String
+  description: String
+  playground: JSON
+}
+
+type Tutorial {
+  id: Int
+  body: JSON
+  title: String
+  description: String
+  blocks: [Block]
+  some: String
+}
+input PageListResolver
+  @fetch(
+    url: "https://content.googleapis.com/storage/v1/b/static-pub/o?prefix=api-landing/pages"
+    response: JSON
+  )
+  @resolve(
+    template: {
+      _map: [
+        {
+          _filter: [
+            { _: [res, body, items] }
+            {
+              _eq: [
+                { _: contentType }
+                "text/markdown; charset=utf-8"
+              ]
+            }
+          ]
+        }
+        { id: { _: _item } }
+      ]
+    }
+  ) {
+  lang: Expression
+}
+#https://content.googleapis.com/storage/v1/b/static-pub/o/api-landing%2Fpages%2Fen%2Findex.md
+input ArgTest @resolve(template: { _: args }) {
+  url: Expression
+}
+input PageUrlById
+  @fetch(
+    url: "https://content.googleapis.com/storage/v1/b/static-pub/o/${args.id}"
+    response: JSON
+  )
+  @resolve(template: { url: { _: [res, body, mediaLink] } }) {
+  id: Expression
+}
+
+input PageByUrl
+  @fetch(url: "${args.url}" response: TEXT)
+  @resolve(
+    template: {
+      # url: { _: [args, url] }
+      res: { _: [res, body] }
+      # some: "stuff"
+    }
+  ) {
+  url: Expression!
+}
+
+type Query {
+  argTest(id: String): JSON
+    @PageUrlById(id: { _encode_uri: { _: [args, id] } })
+    @PageByUrl(url: { _: [root, url] })
+  listTest(id: String): JSON
+    @PageUrlById(id: { _encode_uri: { _: [args, id] } })
+    @PageByUrl(url: { _: [root, url] })
+    @ListResolver(
+      args: [
+        { id: "api-landing/pages/en/about.md" }
+        # { id: "api-landing/pages/ru/index.md" }
+      ]
+    )
+  pages: JSON @PageListResolver
+  
+  template: JSON @TemplateTest
+  fetch: JSON @FetchTest
+  fetchCache: JSON @FetchCacheTest
+  block(id: Int, lang: String): Block
+    @TutorialResolver(
+      id: { _int: { _div: [{ _: [args, id] }, 100] } }
+    )
+    @resolve(
+      template: {
+        _find: [
+          { _: [res, blocks] }
+          { _eq: [{ _: [args, id] }, { _: [value, id] }] }
+          value
+          index
+        ]
+      }
+    )
+  allTutorials(lang: String = "en"): AllTutorialsConnection
+    @AllTutorialsResolver(lang: { _: [args, lang] })
+  tutorial(id: Int = 1): Tutorial
+    @TutorialResolver(id: { _: [args, id] })
+}

@@ -1,0 +1,48 @@
+{
+  "name": "graph-let",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "npm run deploy:worker && npm run deploy:fetcher",
+    "deploy:fetcher": "cd fetch-worker && npx wrangler publish && cpx './worker/*' ./dist && rimraf worker",
+    "deploy:worker": "npx wrangler publish && cpx './worker/*' ./dist && rimraf worker",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cpx": "^1.5.0",
+    "jest": "^24.8.0",
+    "node-fetch": "^2.6.0",
+    "rimraf": "^2.6.3",
+    "webpack": "^4.35.0",
+    "webpack-cli": "^3.3.5"
+  },
+  "dependencies": {
+    "apollo-server": "^2.6.4",
+    "apollo-server-cloud-functions": "^2.6.7",
+    "apollo-server-cloudflare": "^2.6.4",
+    "apollo-server-core": "^2.6.4",
+    "apollo-server-plugin-response-cache": "^0.2.4",
+    "body-parser": "^1.19.0",
+    "dataloader": "^1.4.0",
+    "express": "^4.17.1",
+    "graphql": "^14.3.1",
+    "gray-matter": "^4.0.2",
+    "hjson": "^3.1.2",
+    "htmlparser2": "^3.10.1",
+    "json-pn": "^1.0.1",
+    "lodash": "^4.17.11",
+    "lru-cache": "^5.1.1",
+    "polka": "^0.5.2",
+    "rehype-raw": "^4.0.1",
+    "rehype-stringify": "^6.0.0",
+    "remark-html": "^9.0.1",
+    "remark-parse": "^6.0.3",
+    "remark-rehype": "^4.0.1",
+    "set-cookie-parser": "^2.3.5",
+    "unified": "^8.0.0"
+  }
+}

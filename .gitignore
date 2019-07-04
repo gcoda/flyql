@@ -1,0 +1,5 @@
+node_modules
+dist
+wrangler.toml
+stats.json
+compilation-stats.json
