@@ -40,6 +40,7 @@ module.exports = (gql, document) => gql`
     JSON
     TEXT
     MARKDOWN
+    MARKDOWN_AST
     BLOB
     XML
   }

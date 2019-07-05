@@ -45,10 +45,14 @@ async function handleRequest(event) {
               { _xml: { _: ['body'] } },
               { body: fetched.response.body }
             )
-          }
-          if (options.response === 'MARKDOWN') {
+          } else if (options.response === 'MARKDOWN') {
             fetched.response.body = renderOps(
               { _markdown: [{ _: ['body'] }, 'html'] },
+              { body: fetched.response.body }
+            )
+          } else if (options.response === 'MARKDOWN_AST') {
+            fetched.response.body = renderOps(
+              { _markdown: [{ _: ['body'] }, 'ast'] },
               { body: fetched.response.body }
             )
           }
