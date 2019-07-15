@@ -15,7 +15,7 @@ class ResolveDirective extends SchemaDirectiveVisitor {
     field.resolve = async function(root, args, context, info) {
       const res = await resolve(root, args, context, info)
 
-      const data = { res, root, args }
+      const data = { res, root, args, env: context.env }
 
       const templateData = Array.isArray(templateDataPath)
         ? templateDataPath.reduce(
@@ -34,7 +34,8 @@ class ResolveDirective extends SchemaDirectiveVisitor {
             }
           : templateData
 
-      return context.renderOps(directiveArgs.template || {}, 
+      return context.renderOps(
+        directiveArgs.template || {},
         compilerContext
       )
     }
