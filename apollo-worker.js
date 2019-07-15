@@ -12,9 +12,18 @@ const {
   graphqlCloudflare,
 } = require('apollo-server-cloudflare/dist/cloudflareApollo')
 
+const {
+  handleOptions,
+  corsHeaders,
+  corsOptions,
+} = require('./apollo-cors-options')
+
 const playground = require('./playground')
 async function handleRequest(event) {
   const request = event.request
+  if (request.method === 'OPTIONS') {
+    return handleOptions(request)
+  }
   const reqUrl = request.url.substring(8)
   const [host, route, ...params] = reqUrl.split('/')
   let debug = {
@@ -26,10 +35,16 @@ async function handleRequest(event) {
     const options =
       params[0] === 'live' || params[1] === 'live'
         ? await (async () => {
+            const schemaRaw = request.headers.get('x-let-schema')
+            const schema =
+              schemaRaw && schemaRaw[0] === '"'
+                ? JSON.parse(schemaRaw)
+                : schemaRaw
             const live = {
               typeDefs:
-                request.headers.get('x-let-schema') ||
-                `type Query {empty: String}`,
+                typeof schema === 'string'
+                  ? schema
+                  : `type Query {empty: String}`,
               env: JSON.parse(
                 request.headers.get('x-let-env') || '{}'
               ),
@@ -111,9 +126,13 @@ async function handleRequest(event) {
         ),
         {
           status: 200,
+          headers: {
+            ...corsHeaders(corsOptions),
+            'content-type': 'application/json',
+          },
         }
       )
-      response.headers.set('Content-type', 'application/json')
+      //response.headers.set('Content-type', 'application/json')
       return response
     }
   } else {

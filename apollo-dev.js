@@ -5,9 +5,12 @@ const createServer = require('./apollo-server-gen')
 const schema = require('fs').readFileSync('./apollo-dev.gql', {
   encoding: 'utf8',
 })
-
 const playground = require('./playground')
 const app = require('express')()
+
+const cors = require('cors')
+app.use(cors())
+
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 
@@ -15,7 +18,7 @@ app.get('*', (req, res) => {
   res.send(playground({}))
 })
 app.post('*', (req, res) => {
-  const fromHeader = req.get('x-let-schema')
+  const fromHeader = req.get('x-let-schema') && JSON.parse( req.get('x-let-schema'))
   const fromVariables =
     req.body && req.body.variables && req.body.variables.__letSchema
   const server = createServer({
