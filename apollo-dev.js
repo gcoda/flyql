@@ -18,11 +18,14 @@ app.get('*', (req, res) => {
   res.send(playground({}))
 })
 app.post('*', (req, res) => {
-  const fromHeader = req.get('x-let-schema') && JSON.parse( req.get('x-let-schema'))
+  const fromHeader =
+    req.get('x-let-schema') && JSON.parse(req.get('x-let-schema'))
+  const envHeaders =
+    req.get('x-let-env') && JSON.parse(req.get('x-let-env'))
   const fromVariables =
     req.body && req.body.variables && req.body.variables.__letSchema
   const server = createServer({
-    env: require('./apollo-dev.env'),
+    env: envHeaders || require('./apollo-dev.env'),
     typeDefs: fromHeader || fromVariables || schema,
   })
   const graphql = server.createHandler()
@@ -30,5 +33,4 @@ app.post('*', (req, res) => {
 })
 
 app.listen(7878)
-console.log("apollo-dev:" + 7878)
-
+console.log('apollo-dev:' + 7878)
