@@ -141,18 +141,20 @@ input PageUrlById
 }
 
 input PageByUrl
-  @fetch(url: "${args.url}" response: TEXT)
+  @fetch(url: "${args.url}", response: TEXT)
   @resolve(
     template: {
-      # url: { _: [args, url] }
       res: { _: [res, body] }
-      # some: "stuff"
     }
   ) {
   url: Expression!
 }
 
 type Query {
+  field: String @resolve(template: "Hello World")
+  fieldJson: JSON
+    @fetch(url: "https://httpbin.org/get" response: JSON)
+    @resolve(template: {_:[res,body]})
   argTest(id: String): JSON
     @PageUrlById(id: { _encode_uri: { _: [args, id] } })
     @PageByUrl(url: { _: [root, url] })
@@ -166,7 +168,7 @@ type Query {
       ]
     )
   pages: JSON @PageListResolver
-  
+
   template: JSON @TemplateTest
   fetch: JSON @FetchTest
   fetchCache: JSON @FetchCacheTest
