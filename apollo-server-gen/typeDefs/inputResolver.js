@@ -1,7 +1,14 @@
 const { defaultFieldResolver } = require('graphql')
 
-module.exports = ({ SchemaDirectiveVisitor, options }) => {
+module.exports = ({
+  SchemaDirectiveVisitor,
+  options,
+  isFetchDirective = false,
+}) => {
   class BuildResolverDirective extends SchemaDirectiveVisitor {
+    visitInputObject(object) {
+      return object
+    }
     visitFieldDefinition(field) {
       const directiveArgs = this.args
       const { resolve = defaultFieldResolver } = field
@@ -15,6 +22,10 @@ module.exports = ({ SchemaDirectiveVisitor, options }) => {
         context,
         info
       ) {
+        if (isFetchDirective && !options.config.fetch) {
+          options.config.fetch = directiveArgs
+        }
+        // console.dir({ options, isFetchDirective })
         const { __OverrideArgs, ...args } = resolveArgs
         // const args = __OverrideArgs || defaultArgs
         const root = await resolve(

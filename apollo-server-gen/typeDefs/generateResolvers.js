@@ -68,7 +68,7 @@ module.exports = typeDefs => {
   */
   return {
     dataSources: {
-      ['options.name']: {}
+      ['options.name']: {},
     },
     schemaDirectives: inputResolvers.reduce(
       (resolvers, options) => ({
@@ -78,7 +78,16 @@ module.exports = typeDefs => {
           options,
         }),
       }),
-      {}),
+      {
+        fetch: Resolver({
+          SchemaDirectiveVisitor,
+            isFetchDirective: true,
+            options: {
+            config: { resolve: { template: { _: ['res'] } } },
+          },
+        }),
+      }
+    ),
     typeDefs: {
       kind: 'Document',
       definitions: typeDefs.definitions
